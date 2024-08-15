@@ -53,13 +53,15 @@ async function run() {
 
         });
 
-
+        // single product details 
         app.get('/food-details/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const result = await allFoodData.findOne(query);
             res.send(result);
         });
+
+        
         
         // get data for user email
         app.get('/food/user/:email', async (req, res) => {
@@ -76,6 +78,15 @@ async function run() {
             const result = await addFoodData.insertOne(addFood)
             res.send(result)
         })
+
+
+        // delete method 
+        app.delete('/food/user/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await addFoodData.deleteOne(query);
+            res.send(result);
+        });
 
 
 
