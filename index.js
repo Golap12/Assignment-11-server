@@ -33,13 +33,21 @@ async function run() {
 
         const allFoodData = client.db('assignment-11').collection('foods')
         const addFoodData = client.db('assignment-11').collection('addFoods')
+        const purchaseFoodData = client.db('assignment-11').collection('purchaseFoods')
 
 
+
+
+        // get all food from db allFoodData
+        app.get('/allFood', async (req, res) => {
+            const result = await allFoodData.find().toArray()
+            res.send(result)
+        })
 
 
         // get all food from db 
-        app.get('/allFood', async (req, res) => {
-            const result = await allFoodData.find().toArray()
+        app.get('/purchase', async (req, res) => {
+            const result = await purchaseFoodData.find().toArray()
             res.send(result)
         })
 
@@ -76,6 +84,14 @@ async function run() {
         app.post('/add-foods', async (req, res) => {
             const addFood = req.body
             const result = await addFoodData.insertOne(addFood)
+            res.send(result)
+        })
+
+
+        // save Food data on other collection
+        app.post('/purchase-foods', async (req, res) => {
+            const purchaseFood = req.body
+            const result = await purchaseFoodData.insertOne(purchaseFood)
             res.send(result)
         })
 
