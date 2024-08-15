@@ -61,8 +61,8 @@ async function run() {
             res.send(result);
         });
 
-        
-        
+
+
         // get data for user email
         app.get('/food/user/:email', async (req, res) => {
             const email = req.params.email;
@@ -87,6 +87,24 @@ async function run() {
             const result = await addFoodData.deleteOne(query);
             res.send(result);
         });
+
+
+
+        
+        // update method
+        app.put('/food/user/:id', async (req, res) => {
+            const id = req.params.id;
+            const updatedData = req.body;
+            const query = { _id: new ObjectId(id) };
+
+            const updateDocument = {
+                $set: updatedData,
+            };
+
+            const result = await addFoodData.updateOne(query, updateDocument);
+            res.send(result);
+        });
+
 
 
 
