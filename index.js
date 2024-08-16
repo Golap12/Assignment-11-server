@@ -31,56 +31,71 @@ const client = new MongoClient(uri, {
 async function run() {
     try {
 
-        const allFoodData = client.db('assignment-11').collection('foods')
+        // const allFoodData = client.db('assignment-11').collection('foods')
         const addFoodData = client.db('assignment-11').collection('addFoods')
         const purchaseFoodData = client.db('assignment-11').collection('purchaseFoods')
+        const userFeedback = client.db('assignment-11').collection('userFeedBack')
 
 
 
 
-        // get all food from db allFoodData
+        // get all food from db addFoodData
         app.get('/allFood', async (req, res) => {
-            const result = await allFoodData.find().toArray()
+            const result = await addFoodData.find().toArray()
+            res.send(result)
+        })
+
+        // get user feedback 
+        app.get('/feedback', async (req, res) => {
+            const result = await userFeedback.find().toArray()
+            res.send(result)
+        })
+
+        // save Feedback data 
+        app.post('/feedbackAdd', async (req, res) => {
+            const addFeedback = req.body
+            const result = await userFeedback.insertOne(addFeedback)
             res.send(result)
         })
 
 
-        // get all food from db 
+
+        // get all food from db purchaseFoodData
         app.get('/purchase', async (req, res) => {
             const result = await purchaseFoodData.find().toArray()
             res.send(result)
         })
 
 
-        // top selling food 
+        // top selling food addFoodData
         app.get('/top-selling-foods', async (req, res) => {
 
-            const topSellingFoods = await allFoodData.find({})
+            const topSellingFoods = await addFoodData.find({})
                 .sort({ purchase_count: -1 }).limit(6).toArray();
             res.send(topSellingFoods);
 
         });
 
-        // single product details 
+        // single product details addFoodData
         app.get('/food-details/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
-            const result = await allFoodData.findOne(query);
+            const result = await addFoodData.findOne(query);
             res.send(result);
         });
 
 
 
-        // get data for user email
+        // get data for user email addFoodData
         app.get('/food/user/:email', async (req, res) => {
             const email = req.params.email;
-            const query = { 'addedBy': email };
+            const query = { 'madeBy': email };
             const result = await addFoodData.find(query).toArray();
             res.send(result);
         });
 
 
-        // save Food data 
+        // save Food data addFoodData
         app.post('/add-foods', async (req, res) => {
             const addFood = req.body
             const result = await addFoodData.insertOne(addFood)
@@ -96,7 +111,7 @@ async function run() {
         })
 
 
-        // delete method 
+        // delete method addFoodData
         app.delete('/food/user/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
@@ -105,9 +120,18 @@ async function run() {
         });
 
 
+        // delete method purchaseFoodData
+        app.delete('/purchase/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await purchaseFoodData.deleteOne(query);
+            res.send(result);
+        });
+
+
 
         
-        // update method
+        // update method addFoodData
         app.put('/food/user/:id', async (req, res) => {
             const id = req.params.id;
             const updatedData = req.body;
