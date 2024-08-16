@@ -45,30 +45,9 @@ async function run() {
             res.send(result)
         })
 
-        // get user feedback 
-        app.get('/feedback', async (req, res) => {
-            const result = await userFeedback.find().toArray()
-            res.send(result)
-        })
 
-        // save Feedback data 
-        app.post('/feedbackAdd', async (req, res) => {
-            const addFeedback = req.body
-            const result = await userFeedback.insertOne(addFeedback)
-            res.send(result)
-        })
-
-
-
-        // get all food from db purchaseFoodData
-        app.get('/purchase', async (req, res) => {
-            const result = await purchaseFoodData.find().toArray()
-            res.send(result)
-        })
-
-
-        // top selling food addFoodData
-        app.get('/top-selling-foods', async (req, res) => {
+         // top selling food addFoodData
+         app.get('/top-selling-foods', async (req, res) => {
 
             const topSellingFoods = await addFoodData.find({})
                 .sort({ purchase_count: -1 }).limit(6).toArray();
@@ -103,13 +82,6 @@ async function run() {
         })
 
 
-        // save Food data on other collection
-        app.post('/purchase-foods', async (req, res) => {
-            const purchaseFood = req.body
-            const result = await purchaseFoodData.insertOne(purchaseFood)
-            res.send(result)
-        })
-
 
         // delete method addFoodData
         app.delete('/food/user/:id', async (req, res) => {
@@ -120,17 +92,7 @@ async function run() {
         });
 
 
-        // delete method purchaseFoodData
-        app.delete('/purchase/:id', async (req, res) => {
-            const id = req.params.id;
-            const query = { _id: new ObjectId(id) };
-            const result = await purchaseFoodData.deleteOne(query);
-            res.send(result);
-        });
-
-
-
-        
+       
         // update method addFoodData
         app.put('/food/user/:id', async (req, res) => {
             const id = req.params.id;
@@ -144,6 +106,48 @@ async function run() {
             const result = await addFoodData.updateOne(query, updateDocument);
             res.send(result);
         });
+
+
+// ---------------------------------------------------------- 
+        // get user feedback 
+        app.get('/feedback', async (req, res) => {
+            const result = await userFeedback.find().toArray()
+            res.send(result)
+        })
+
+        // save Feedback data 
+        app.post('/feedbackAdd', async (req, res) => {
+            const addFeedback = req.body
+            const result = await userFeedback.insertOne(addFeedback)
+            res.send(result)
+        })
+
+// ---------------------------------------------------------------------- 
+
+        // get all food from db purchaseFoodData
+        app.get('/purchase', async (req, res) => {
+            const result = await purchaseFoodData.find().toArray()
+            res.send(result)
+        })
+
+        // save Food data on purchase collection
+        app.post('/purchase-foods', async (req, res) => {
+            const purchaseFood = req.body
+            const result = await purchaseFoodData.insertOne(purchaseFood)
+            res.send(result)
+        })
+
+
+         // delete method purchaseFoodData
+         app.delete('/purchase/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await purchaseFoodData.deleteOne(query);
+            res.send(result);
+        });
+
+// ----------------------------------------------------------------- 
+       
 
 
 
