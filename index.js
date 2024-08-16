@@ -2,6 +2,7 @@ const express = require('express')
 const cors = require('cors')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const jwt = require('jsonwebtoken')
+const cookieParser = require('cookie-parser');
 require('dotenv').config()
 // const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
 const port = process.env.PORT || 9000
@@ -10,13 +11,31 @@ const app = express()
 
 const corsOption = {
     origin: ['http://localhost:5173', 'http://localhost:5174'],
-    Credential: true,
+    credentials: true,
     optionSuccessStatus: 200,
 }
 
 // middleware
 app.use(cors(corsOption))
 app.use(express.json())
+app.use(cookieParser())
+
+
+// middleware function for jwt 
+const verifyToken = (req, res, next) => {
+    const token = req.cookies?.token;
+    if (!token) return res.status(401).send({ message: "Unauthorized Access" });
+
+    if (token) {
+        jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+            if (err) {
+                return res.status(401).send({ message: "Unauthorized Access" });
+            }
+            req.user = decoded;
+            next();
+        });
+    }
+};
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.0cyoac0.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
@@ -39,6 +58,38 @@ async function run() {
 
 
 
+
+        // generate token 
+        app.post('/jwt', async (req, res) => {
+            const user = req.body
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+                expiresIn: "1h"
+            })
+            res.cookie('token', token, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict'
+            })
+                .send({ success: true })
+        })
+
+        // clear token after logout 
+        app.get('/logout', async (req, res) => {
+            res.clearCookie('token', {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+                maxAge: 0
+            })
+                .send({ success: true })
+
+        })
+
+
+
+
+
+
         // get all food from db addFoodData
         app.get('/allFood', async (req, res) => {
             const result = await addFoodData.find().toArray()
@@ -46,14 +97,23 @@ async function run() {
         })
 
 
-         // top selling food addFoodData
-         app.get('/top-selling-foods', async (req, res) => {
+        // top selling food addFoodData
+        app.get('/top-selling-foods', async (req, res) => {
 
             const topSellingFoods = await addFoodData.find({})
                 .sort({ purchase_count: -1 }).limit(6).toArray();
             res.send(topSellingFoods);
 
         });
+
+        // search food api addFoodData
+        app.get('/search-foods', async (req, res) => {
+            const searchQuery = req.query.name;
+            const query = { foodName: { $regex: searchQuery, $options: 'i' } };
+            const result = await addFoodData.find(query).toArray();
+            res.send(result);
+        });
+
 
         // single product details addFoodData
         app.get('/food-details/:id', async (req, res) => {
@@ -66,7 +126,7 @@ async function run() {
 
 
         // get data for user email addFoodData
-        app.get('/food/user/:email', async (req, res) => {
+        app.get('/food/user/:email', verifyToken, async (req, res) => {
             const email = req.params.email;
             const query = { 'madeBy': email };
             const result = await addFoodData.find(query).toArray();
@@ -92,7 +152,7 @@ async function run() {
         });
 
 
-       
+
         // update method addFoodData
         app.put('/food/user/:id', async (req, res) => {
             const id = req.params.id;
@@ -108,7 +168,7 @@ async function run() {
         });
 
 
-// ---------------------------------------------------------- 
+        // ---------------------------------------------------------- 
         // get user feedback 
         app.get('/feedback', async (req, res) => {
             const result = await userFeedback.find().toArray()
@@ -122,11 +182,17 @@ async function run() {
             res.send(result)
         })
 
-// ---------------------------------------------------------------------- 
+        // ---------------------------------------------------------------------- 
 
         // get all food from db purchaseFoodData
-        app.get('/purchase', async (req, res) => {
-            const result = await purchaseFoodData.find().toArray()
+        app.get('/purchase/foods/:email', verifyToken, async (req, res) => {
+            const tokenEmail = req.user.email
+            const email = req.params.email;
+            if (tokenEmail !== email) {
+                return res.status(403).send({ message: "Forbidden Access" })
+            }
+            const query = { 'purchaseBy': email };
+            const result = await purchaseFoodData.find(query).toArray();
             res.send(result)
         })
 
@@ -138,16 +204,16 @@ async function run() {
         })
 
 
-         // delete method purchaseFoodData
-         app.delete('/purchase/:id', async (req, res) => {
+        // delete method purchaseFoodData
+        app.delete('/purchase/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const result = await purchaseFoodData.deleteOne(query);
             res.send(result);
         });
 
-// ----------------------------------------------------------------- 
-       
+        // ----------------------------------------------------------------- 
+
 
 
 
