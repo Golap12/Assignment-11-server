@@ -10,7 +10,7 @@ const port = process.env.PORT || 9000
 const app = express()
 
 const corsOption = {
-    origin: ['http://localhost:5173', 'http://localhost:5174'],
+    origin: ['http://localhost:5173', 'http://localhost:5174','assignment-11-5ce6f.web.app'],
     credentials: true,
     optionSuccessStatus: 200,
 }
@@ -96,13 +96,24 @@ async function run() {
             res.send(result)
         })
 
-
-        // top selling food addFoodData
+        // pagination 
         app.get('/top-selling-foods', async (req, res) => {
-
+            const page = parseInt(req.query.page) || 1;
+            const limit = parseInt(req.query.limit) || 6;
             const topSellingFoods = await addFoodData.find({})
-                .sort({ purchase_count: -1 }).limit(6).toArray();
-            res.send(topSellingFoods);
+                .sort({ purchase_count: -1 })
+                .skip((page - 1) * limit)
+                .limit(limit)
+                .toArray();
+
+            const totalItems = await addFoodData.countDocuments({});
+            const totalPages = Math.ceil(totalItems / limit);
+
+            res.send({
+                topSellingFoods,
+                totalPages,
+                currentPage: page
+            });
 
         });
 
