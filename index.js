@@ -4,16 +4,16 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const jwt = require('jsonwebtoken')
 const cookieParser = require('cookie-parser');
 require('dotenv').config()
-// const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
+
 const port = process.env.PORT || 9000
 
 const app = express()
 
 const corsOption = {
-    origin: ['http://localhost:5173', 'http://localhost:5174','assignment-11-5ce6f.web.app'],
+    origin: ['http://localhost:5173', 'http://localhost:5174', 'https://assignment-11-5ce6f.web.app'],
     credentials: true,
-    optionSuccessStatus: 200,
-}
+    optionsSuccessStatus: 200,
+};
 
 // middleware
 app.use(cors(corsOption))
